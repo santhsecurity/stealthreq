@@ -1,0 +1,31 @@
+[package]
+exclude = ["target/"]
+name = "stealthreq"
+version = "0.1.1"
+edition = "2021"
+rust-version = "1.70"
+description = "Trait-driven, human-like request mutation primitives for crawlers and scrapers."
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/santhsecurity/stealthreq"
+authors = ["Corum Collective LLC <engineering@corumcollective.com>"]
+keywords = ["crawler", "scraper", "http", "stealth", "waf"]
+categories = ["network-programming", "web-programming"]
+
+[dependencies]
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+toml = "0.8"
+md-5 = "0.10"
+
+[dev-dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "http2", "charset", "json"] }
+hyper = { version = "1", features = ["http1", "http2", "client"] }
+http = "1"
+ureq = "2"
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+
+[features]
+default = []

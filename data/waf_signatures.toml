@@ -1,0 +1,409 @@
+# WAF Signature Definitions
+#
+# Each [[signatures]] entry defines one WAF product with its detection
+# indicators and recommended evasion encodings.
+#
+# Adding a new WAF:
+#   1. Append a [[signatures]] block with a unique `id`.
+#   2. List detection indicators — each has a `check`, `weight`, and `description`.
+#   3. Set `evasion` to the encoding names that tend to bypass this WAF.
+#   4. No Rust code changes required.
+#
+# Check types:
+#   header_exists       — header with `value` name is present
+#   header_any_exists   — any of `values` headers are present
+#   header_contains     — header `name` contains substring `value`
+#   body_contains       — response body contains `value`
+#   body_any            — body contains any of `values`
+#   cookie_exists       — cookie with exact `value` name is present
+#   cookie_any          — any of `values` cookie names are present
+#   cookie_prefix       — any cookie name starts with `value`
+#   cookie_contains     — any cookie name contains `value`
+#   any_header_contains — any header name or value contains `value`
+#   status_in           — HTTP status code is in `values`
+#   all_of              — all sub-`checks` must pass (AND)
+#   any_of              — any sub-`checks` may pass (OR)
+
+# ─── Cloudflare ──────────────────────────────────────────────────────
+
+[[signatures]]
+id = "cloudflare"
+name = "Cloudflare"
+evasion = ["UrlEncode", "UnicodeEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "cf-ray header"
+check = { type = "header_exists", value = "cf-ray" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "cloudflare cookie"
+check = { type = "cookie_any", values = ["__cfduid", "cf_clearance"] }
+
+[[signatures.indicators]]
+weight = 0.35
+description = "cloudflare challenge body"
+check = { type = "body_any", values = ["attention required", "cloudflare ray id"] }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "cf-cache-status header"
+check = { type = "header_exists", value = "cf-cache-status" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "server: cloudflare"
+check = { type = "header_contains", name = "server", value = "cloudflare" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "cloudflare error code body"
+check = { type = "body_any", values = ["error 1020", "error 1015"] }
+
+# ─── AWS WAF ─────────────────────────────────────────────────────────
+
+[[signatures]]
+id = "aws_waf"
+name = "AWS WAF"
+evasion = ["DoubleUrlEncode", "UnicodeEncode"]
+
+[[signatures.indicators]]
+weight = 0.35
+description = "x-amzn-requestid header"
+check = { type = "header_exists", value = "x-amzn-requestid" }
+
+[[signatures.indicators]]
+weight = 0.45
+description = "403 request blocked body"
+[signatures.indicators.check]
+type = "all_of"
+checks = [
+  { type = "status_in", values = [403] },
+  { type = "body_contains", value = "request blocked" },
+]
+
+[[signatures.indicators]]
+weight = 0.30
+description = "aws waf error marker"
+[signatures.indicators.check]
+type = "any_of"
+checks = [
+  { type = "header_contains", name = "x-amzn-errortype", value = "waf" },
+  { type = "body_contains", value = "aws waf" },
+]
+
+[[signatures.indicators]]
+weight = 0.25
+description = "x-amzn-trace-id header"
+check = { type = "header_exists", value = "x-amzn-trace-id" }
+
+[[signatures.indicators]]
+weight = 0.20
+description = "x-amz-cf-id header"
+check = { type = "header_exists", value = "x-amz-cf-id" }
+
+# ─── Akamai ──────────────────────────────────────────────────────────
+
+[[signatures]]
+id = "akamai"
+name = "Akamai"
+evasion = ["DoubleUrlEncode", "HtmlEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "server: akamaighost"
+check = { type = "header_contains", name = "server", value = "akamaighost" }
+
+[[signatures.indicators]]
+weight = 0.35
+description = "akamai reference id body"
+check = { type = "body_any", values = ["reference #", "reference id:"] }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "akamai header marker"
+check = { type = "header_any_exists", values = ["akamai-origin-hop", "x-akamai-transformed"] }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "x-akamai-request-id header"
+check = { type = "header_exists", value = "x-akamai-request-id" }
+
+# ─── Imperva / Incapsula ─────────────────────────────────────────────
+
+[[signatures]]
+id = "imperva"
+name = "Imperva/Incapsula"
+evasion = ["UnicodeEncode", "HtmlEncode"]
+
+[[signatures.indicators]]
+weight = 0.35
+description = "incap_ses cookie"
+check = { type = "cookie_exists", value = "incap_ses" }
+
+[[signatures.indicators]]
+weight = 0.35
+description = "visid_incap cookie"
+check = { type = "cookie_exists", value = "visid_incap" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "imperva/incapsula body"
+check = { type = "body_any", values = ["imperva", "incapsula"] }
+
+[[signatures.indicators]]
+weight = 0.20
+description = "x-cdn incapsula header"
+check = { type = "header_contains", name = "x-cdn", value = "incapsula" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "x-iinfo header"
+check = { type = "header_exists", value = "x-iinfo" }
+
+# ─── F5 BIG-IP ───────────────────────────────────────────────────────
+
+[[signatures]]
+id = "f5_big_ip"
+name = "F5 BIG-IP"
+evasion = ["UrlEncode", "Base64Encode"]
+
+[[signatures.indicators]]
+weight = 0.40
+description = "BIGipServer cookie"
+check = { type = "cookie_prefix", value = "bigipserver" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "TS cookie"
+check = { type = "cookie_prefix", value = "ts" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "big-ip marker"
+[signatures.indicators.check]
+type = "any_of"
+checks = [
+  { type = "header_contains", name = "server", value = "big-ip" },
+  { type = "body_contains", value = "big-ip" },
+]
+
+[[signatures.indicators]]
+weight = 0.30
+description = "F5-TrafficShield cookie"
+check = { type = "cookie_exists", value = "f5-trafficshield" }
+
+[[signatures.indicators]]
+weight = 0.20
+description = "x-cnection header"
+check = { type = "header_exists", value = "x-cnection" }
+
+# ─── Sucuri ──────────────────────────────────────────────────────────
+
+[[signatures]]
+id = "sucuri"
+name = "Sucuri"
+evasion = ["DoubleUrlEncode", "UnicodeEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "x-sucuri-id header"
+check = { type = "header_exists", value = "x-sucuri-id" }
+
+[[signatures.indicators]]
+weight = 0.35
+description = "sucuri block body"
+check = { type = "body_any", values = ["sucuri.net", "access denied - sucuri website firewall"] }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "server: sucuri"
+check = { type = "header_contains", name = "server", value = "sucuri" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "x-sucuri-cache header"
+check = { type = "header_exists", value = "x-sucuri-cache" }
+
+# ─── ModSecurity ─────────────────────────────────────────────────────
+
+[[signatures]]
+id = "modsecurity"
+name = "ModSecurity"
+evasion = ["DoubleUrlEncode", "HtmlEncode", "UnicodeEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "modsecurity body marker"
+check = { type = "body_any", values = ["mod_security", "modsecurity"] }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "owasp crs body marker"
+check = { type = "body_any", values = ["owasp", "crs"] }
+
+[[signatures.indicators]]
+weight = 0.20
+description = "403/406 common modsecurity stack"
+[signatures.indicators.check]
+type = "all_of"
+checks = [
+  { type = "status_in", values = [403, 406] },
+  { type = "any_of", checks = [{ type = "header_contains", name = "server", value = "apache" }, { type = "header_contains", name = "server", value = "nginx" }] },
+]
+
+[[signatures.indicators]]
+weight = 0.35
+description = "server: modsecurity"
+[signatures.indicators.check]
+type = "any_of"
+checks = [
+  { type = "header_contains", name = "server", value = "mod_security" },
+  { type = "header_contains", name = "server", value = "modsecurity" },
+]
+
+[[signatures.indicators]]
+weight = 0.25
+description = "not acceptable 406 body"
+[signatures.indicators.check]
+type = "all_of"
+checks = [
+  { type = "body_contains", value = "not acceptable" },
+  { type = "status_in", values = [406] },
+]
+
+# ─── Barracuda ───────────────────────────────────────────────────────
+
+[[signatures]]
+id = "barracuda"
+name = "Barracuda"
+evasion = ["UrlEncode", "HexEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "barracuda cookie"
+check = { type = "cookie_any", values = ["barra_counter_session", "barra_counter"] }
+
+[[signatures.indicators]]
+weight = 0.35
+description = "barracuda body marker"
+check = { type = "body_contains", value = "barracuda web application firewall" }
+
+[[signatures.indicators]]
+weight = 0.20
+description = "barracuda header marker"
+check = { type = "any_header_contains", value = "barracuda" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "bnip cookie"
+check = { type = "cookie_exists", value = "bnip" }
+
+# ─── Citrix NetScaler ────────────────────────────────────────────────
+
+[[signatures]]
+id = "citrix_netscaler"
+name = "Citrix NetScaler"
+evasion = ["UrlEncode", "UnicodeEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "ns_af cookie"
+check = { type = "cookie_exists", value = "ns_af" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "citrix via header"
+check = { type = "header_contains", name = "via", value = "citrix" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "citrix/netscaler body"
+check = { type = "body_any", values = ["citrix", "netscaler"] }
+
+[[signatures.indicators]]
+weight = 0.35
+description = "citrix_ns_id cookie"
+check = { type = "cookie_exists", value = "citrix_ns_id" }
+
+# ─── Fortinet FortiWeb ───────────────────────────────────────────────
+
+[[signatures]]
+id = "fortiweb"
+name = "Fortinet FortiWeb"
+evasion = ["UnicodeEncode", "HexEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "FORTIWAFSID cookie"
+check = { type = "cookie_exists", value = "fortiwafsid" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "fortiweb body marker"
+check = { type = "body_any", values = ["fortiweb", "fortinet"] }
+
+[[signatures.indicators]]
+weight = 0.20
+description = "fortiweb header marker"
+check = { type = "any_header_contains", value = "fortiweb" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "server: fortiweb"
+check = { type = "header_contains", name = "server", value = "fortiweb" }
+
+# ─── Wordfence ───────────────────────────────────────────────────────
+
+[[signatures]]
+id = "wordfence"
+name = "Wordfence"
+evasion = ["DoubleUrlEncode", "HtmlEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "wordfence body marker"
+check = { type = "body_any", values = ["wordfence", "wfwaf"] }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "wordfence header marker"
+check = { type = "any_header_contains", value = "wordfence" }
+
+[[signatures.indicators]]
+weight = 0.25
+description = "wordfence block copy"
+check = { type = "body_contains", value = "your access to this site has been limited" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "wfwaf-authcookie cookie"
+check = { type = "cookie_contains", value = "wfwaf-authcookie" }
+
+# ─── DDoS-Guard ──────────────────────────────────────────────────────
+
+[[signatures]]
+id = "ddos_guard"
+name = "DDoS-Guard"
+evasion = ["UrlEncode", "DoubleUrlEncode"]
+
+[[signatures.indicators]]
+weight = 0.45
+description = "ddos-guard header marker"
+check = { type = "any_header_contains", value = "ddos-guard" }
+
+[[signatures.indicators]]
+weight = 0.35
+description = "ddos-guard body marker"
+check = { type = "body_contains", value = "ddos-guard" }
+
+[[signatures.indicators]]
+weight = 0.20
+description = "server: ddos-guard"
+check = { type = "header_contains", name = "server", value = "ddos-guard" }
+
+[[signatures.indicators]]
+weight = 0.30
+description = "__ddg1_ cookie"
+check = { type = "cookie_exists", value = "__ddg1_" }
