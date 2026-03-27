@@ -17,10 +17,9 @@ impl TimingJitter {
 
     #[must_use]
     pub fn sample_delay(&self, rng: &mut impl Rng) -> Duration {
-        if self.max_ms <= self.min_ms {
-            return Duration::from_millis(self.min_ms);
-        }
-        Duration::from_millis(rng.gen_range(self.min_ms..=self.max_ms))
+        let span = self.max_ms.saturating_sub(self.min_ms);
+        let offset = if span == 0 { 0 } else { rng.gen_range(0..=span) };
+        Duration::from_millis(self.min_ms.saturating_add(offset))
     }
 
     #[must_use]

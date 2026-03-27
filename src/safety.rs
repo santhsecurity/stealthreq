@@ -338,14 +338,14 @@ mod tests {
     fn gaussian_delay_mean_is_centered() {
         let mut rng = StdRng::seed_from_u64(42);
         let expected_mean = 300.0;
-        let mut sum: u64 = 0;
+        let mut sum = 0.0;
         let iterations = 5000;
 
         for _ in 0..iterations {
-            sum += gaussian_delay(100, 500, &mut rng).as_millis() as u64;
+            sum += gaussian_delay(100, 500, &mut rng).as_secs_f64() * 1000.0;
         }
 
-        let actual_mean = sum as f64 / iterations as f64;
+        let actual_mean = sum / f64::from(iterations);
         assert!(
             (actual_mean - expected_mean).abs() < 30.0,
             "mean {actual_mean} should be near {expected_mean}"

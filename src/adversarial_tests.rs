@@ -137,7 +137,7 @@ fn timing_jitter_very_large_values() {
     // This could panic or overflow - let's see
     let delay = jitter.sample_delay(&mut rng);
     // Just verify it doesn't panic - the actual value depends on implementation
-    assert!(delay.as_millis() >= (u64::MAX - 100) as u128 || delay.as_millis() <= 100);
+    assert!(delay.as_millis() >= u128::from(u64::MAX - 100) || delay.as_millis() <= 100);
 }
 
 #[test]
@@ -244,9 +244,9 @@ fn toml_config_empty_string() {
 #[test]
 fn toml_config_missing_required_fields() {
     // Test with minimal TOML - only some fields
-    let toml = r#"
+    let toml = r"
 seed = 123
-"#;
+";
     let cfg = StealthProfileConfig::from_toml(toml);
     assert!(cfg.is_ok(), "TOML with just seed should work");
     let cfg = cfg.unwrap();
@@ -256,28 +256,28 @@ seed = 123
 
 #[test]
 fn toml_config_invalid_header_budget_zero() {
-    let toml = r#"
+    let toml = r"
 header_budget = 0
-"#;
+";
     let cfg = StealthProfileConfig::from_toml(toml);
     assert!(cfg.is_err(), "header_budget = 0 should be rejected");
 }
 
 #[test]
 fn toml_config_inverted_jitter_range() {
-    let toml = r#"
+    let toml = r"
 jitter_ms_min = 500
 jitter_ms_max = 100
-"#;
+";
     let cfg = StealthProfileConfig::from_toml(toml);
     assert!(cfg.is_err(), "Inverted jitter range should be rejected");
 }
 
 #[test]
 fn toml_config_very_large_seed() {
-    let toml = r#"
+    let toml = r"
 seed = 18446744073709551615
-"#;
+";
     let cfg = StealthProfileConfig::from_toml(toml);
     // This might fail due to integer overflow in parsing
     assert!(
@@ -426,8 +426,10 @@ fn config_build_with_missing_optional_fields() {
 
 #[test]
 fn header_policy_with_very_long_referer() {
-    let mut policy = HeaderPolicy::default();
-    policy.referer_hosts = vec!["https://".to_string() + &"a".repeat(10000)];
+    let policy = HeaderPolicy {
+        referer_hosts: vec!["https://".to_string() + &"a".repeat(10000)],
+        ..HeaderPolicy::default()
+    };
 
     let mut rng = StdRng::seed_from_u64(42);
     let jitter = TimingJitter::new(100, 200);
@@ -447,8 +449,10 @@ fn header_policy_with_very_long_referer() {
 
 #[test]
 fn header_policy_unicode_in_referer() {
-    let mut policy = HeaderPolicy::default();
-    policy.referer_hosts = vec!["https://例え.jp/テスト".to_string()];
+    let policy = HeaderPolicy {
+        referer_hosts: vec!["https://例え.jp/テスト".to_string()],
+        ..HeaderPolicy::default()
+    };
 
     let mut rng = StdRng::seed_from_u64(42);
     let jitter = TimingJitter::new(100, 200);
@@ -460,8 +464,7 @@ fn header_policy_unicode_in_referer() {
     if let Some((_, value)) = referer {
         assert!(
             value.contains("例え") || value.contains("テスト"),
-            "Unicode should be preserved in referer, got: {}",
-            value
+            "Unicode should be preserved in referer, got: {value}"
         );
     }
 }

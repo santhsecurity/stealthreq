@@ -218,6 +218,11 @@ impl HeaderPolicy {
         headers: &mut Vec<(String, String)>,
         budget: usize,
     ) {
+        if budget == 0 {
+            headers.clear();
+            return;
+        }
+
         while headers.len() > budget {
             let ua_pos = headers
                 .iter()

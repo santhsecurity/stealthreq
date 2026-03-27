@@ -129,7 +129,7 @@ mod tests {
         ))
         .unwrap();
         assert_eq!(waf.name, "Cloudflare");
-        assert_eq!(waf.confidence, 1.0);
+        assert!((waf.confidence - 1.0).abs() < f64::EPSILON);
     }
 
     #[test]
@@ -144,7 +144,7 @@ mod tests {
         ))
         .unwrap();
         assert_eq!(waf.name, "AWS WAF");
-        assert_eq!(waf.confidence, 1.0);
+        assert!((waf.confidence - 1.0).abs() < f64::EPSILON);
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
         ))
         .unwrap();
         assert_eq!(waf.name, "Akamai");
-        assert_eq!(waf.confidence, 1.0);
+        assert!((waf.confidence - 1.0).abs() < f64::EPSILON);
     }
 
     #[test]
