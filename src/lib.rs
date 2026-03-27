@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 //! `stealthreq` generates human-like request behavior for scraping and crawler clients.
 //!
 //! It intentionally avoids hard-coupling to any single HTTP implementation.
