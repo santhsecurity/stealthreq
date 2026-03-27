@@ -56,7 +56,29 @@ impl Default for StealthProfileConfig {
 }
 
 impl StealthProfileConfig {
-    /// Parse this configuration from TOML text.
+    /// Parse a stealth profile configuration from TOML text.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StealthError::Config` if the TOML is invalid or if the
+    /// configuration values are inconsistent (e.g., `jitter_ms_min > jitter_ms_max`).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use stealthreq::StealthProfileConfig;
+    ///
+    /// let toml = r#"
+    /// jitter_ms_min = 100
+    /// jitter_ms_max = 500
+    /// header_budget = 8
+    /// seed = 42
+    /// "#;
+    ///
+    /// let config = StealthProfileConfig::from_toml(toml).unwrap();
+    /// assert_eq!(config.jitter_ms_min, 100);
+    /// assert_eq!(config.header_budget, 8);
+    /// ```
     pub fn from_toml(toml: &str) -> Result<Self, crate::StealthError> {
         let cfg: Self =
             toml::from_str(toml).map_err(|err| crate::StealthError::Config(err.to_string()))?;
@@ -64,7 +86,20 @@ impl StealthProfileConfig {
         Ok(cfg)
     }
 
-    /// Build a concrete profile from this config.
+    /// Build a concrete [`StealthPolicy`](crate::StealthPolicy) from this configuration.
+    ///
+    /// This converts the configuration into an executable policy that can be
+    /// applied to requests.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use stealthreq::StealthProfileConfig;
+    ///
+    /// let config = StealthProfileConfig::default();
+    /// let policy = config.build();
+    /// // Now you can apply the policy to requests
+    /// ```
     #[must_use]
     pub fn build(self) -> crate::StealthPolicy {
         let jitter = TimingJitter::new(self.jitter_ms_min, self.jitter_ms_max);

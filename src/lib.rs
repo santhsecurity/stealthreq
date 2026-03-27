@@ -1,10 +1,29 @@
-#![allow(missing_docs)]
 //! `stealthreq` generates human-like request behavior for scraping and crawler clients.
 //!
 //! It intentionally avoids hard-coupling to any single HTTP implementation.
 //!
 //! It exists for callers that need browser-like request shaping without giving up their own HTTP
 //! stack, retry logic, or transport integration.
+//!
+//! # Quick Start
+//!
+//! ```rust
+//! use stealthreq::{StealthPolicy, RequestModifier, MutableRequest};
+//!
+//! // Create a default stealth policy
+//! let policy = StealthPolicy::default();
+//!
+//! // Define a mutable request type and implement MutableRequest
+//! # #[derive(Default)]
+//! # struct MyRequest { headers: Vec<(String, String)> }
+//! # impl MutableRequest for MyRequest {
+//! #     fn set_header(&mut self, name: &str, value: &str) {
+//! #         self.headers.push((name.to_string(), value.to_string()));
+//! #     }
+//! # }
+//! # let mut req = MyRequest::default();
+//! # let _ = policy.apply(&mut req);
+//! ```
 
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
@@ -33,7 +52,16 @@ use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, StealthError>;
 
-/// Public error type.
+/// Errors that can occur when building or applying stealth profiles.
+///
+/// # Examples
+///
+/// ```rust
+/// use stealthreq::StealthError;
+///
+/// let err = StealthError::Config("invalid header budget".to_string());
+/// assert!(err.to_string().contains("configuration error"));
+/// ```
 #[derive(Debug, Error)]
 pub enum StealthError {
     /// Invalid TOML/config input.
