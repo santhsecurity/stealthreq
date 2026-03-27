@@ -1,7 +1,7 @@
 [package]
 exclude = ["target/"]
 name = "stealthreq"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.80"
 description = "Trait-driven, human-like request mutation primitives for crawlers and scrapers."
