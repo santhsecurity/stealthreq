@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 //! `stealthreq` generates human-like request behavior for scraping and crawler clients.
 //!
 //! It intentionally avoids hard-coupling to any single HTTP implementation.
@@ -21,6 +21,7 @@ mod policy;
 mod timing;
 mod tls;
 pub mod waf;
+pub mod safety;
 
 pub use crate::config::StealthProfileConfig;
 pub use crate::headers::{HeaderPolicy, HeaderPolicyConfig};

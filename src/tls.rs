@@ -2,7 +2,7 @@
 ///
 /// The crate does not perform TLS handshakes itself; this data lets clients
 /// bind profiles to their own TLS stack (rustls/boring/native-tls, etc.).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TlsFingerprint {
     /// Human label for telemetry and observability.
     pub name: String,
@@ -36,7 +36,7 @@ impl TlsFingerprint {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TlsRotationPolicy {
     pub profiles: Vec<TlsFingerprint>,
     pub enable: bool,

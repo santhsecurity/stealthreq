@@ -17,6 +17,7 @@ rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 thiserror = "2"
 toml = "0.8"
+urlencoding = "2"
 md-5 = "0.10"
 
 [dev-dependencies]

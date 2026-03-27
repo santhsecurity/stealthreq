@@ -3,7 +3,7 @@ use std::time::Duration;
 use rand::Rng;
 
 /// Timing jitter options.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TimingJitter {
     pub min_ms: u64,
     pub max_ms: u64,

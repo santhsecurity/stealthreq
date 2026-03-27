@@ -1,4 +1,5 @@
 use crate::TimingJitter;
+use std::sync::Arc;
 
 const USER_AGENTS: &[&str] = &[
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -21,14 +22,104 @@ const UPGRADE_INSECURE_REQUEST: &[&str] = &["1", "0"];
 /// Uses `Arc<str>` for efficient sharing of static strings.
 #[derive(Debug, Clone)]
 pub struct HeaderPolicy {
-    pub user_agents: Vec<std::sync::Arc<str>>,
-    pub accept_languages: Vec<std::sync::Arc<str>>,
-    pub accept_encodings: Vec<std::sync::Arc<str>>,
-    pub cache_controls: Vec<std::sync::Arc<str>>,
-    pub upgrade_insecure: Vec<std::sync::Arc<str>>,
+    pub user_agents: Vec<Arc<str>>,
+    pub accept_languages: Vec<Arc<str>>,
+    pub accept_encodings: Vec<Arc<str>>,
+    pub cache_controls: Vec<Arc<str>>,
+    pub upgrade_insecure: Vec<Arc<str>>,
     pub referer_hosts: Vec<String>,
     pub extra_headers: Vec<(String, String)>,
     pub include_pragmas: bool,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct HeaderPolicySerde {
+    user_agents: Vec<String>,
+    accept_languages: Vec<String>,
+    accept_encodings: Vec<String>,
+    cache_controls: Vec<String>,
+    upgrade_insecure: Vec<String>,
+    referer_hosts: Vec<String>,
+    extra_headers: Vec<(String, String)>,
+    include_pragmas: bool,
+}
+
+impl serde::Serialize for HeaderPolicy {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let helper = HeaderPolicySerde {
+            user_agents: self
+                .user_agents
+                .iter()
+                .map(|v| v.as_ref().to_string())
+                .collect(),
+            accept_languages: self
+                .accept_languages
+                .iter()
+                .map(|v| v.as_ref().to_string())
+                .collect(),
+            accept_encodings: self
+                .accept_encodings
+                .iter()
+                .map(|v| v.as_ref().to_string())
+                .collect(),
+            cache_controls: self
+                .cache_controls
+                .iter()
+                .map(|v| v.as_ref().to_string())
+                .collect(),
+            upgrade_insecure: self
+                .upgrade_insecure
+                .iter()
+                .map(|v| v.as_ref().to_string())
+                .collect(),
+            referer_hosts: self.referer_hosts.clone(),
+            extra_headers: self.extra_headers.clone(),
+            include_pragmas: self.include_pragmas,
+        };
+        helper.serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for HeaderPolicy {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let helper = HeaderPolicySerde::deserialize(deserializer)?;
+        Ok(HeaderPolicy {
+            user_agents: helper
+                .user_agents
+                .into_iter()
+                .map(|value| Arc::<str>::from(value.into_boxed_str()))
+                .collect(),
+            accept_languages: helper
+                .accept_languages
+                .into_iter()
+                .map(|value| Arc::<str>::from(value.into_boxed_str()))
+                .collect(),
+            accept_encodings: helper
+                .accept_encodings
+                .into_iter()
+                .map(|value| Arc::<str>::from(value.into_boxed_str()))
+                .collect(),
+            cache_controls: helper
+                .cache_controls
+                .into_iter()
+                .map(|value| Arc::<str>::from(value.into_boxed_str()))
+                .collect(),
+            upgrade_insecure: helper
+                .upgrade_insecure
+                .into_iter()
+                .map(|value| Arc::<str>::from(value.into_boxed_str()))
+                .collect(),
+            referer_hosts: helper.referer_hosts,
+            extra_headers: helper.extra_headers,
+            include_pragmas: helper.include_pragmas,
+        })
+    }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

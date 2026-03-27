@@ -147,10 +147,15 @@ impl RequestModifier for StealthPolicy {
     }
 
     fn next_tls_profile(&self, rng: &mut StdRng) -> TlsFingerprint {
-        if !self.rotate_tls {
+        if self.rotate_tls {
             return self.tls.rotate(rng);
         }
-        self.tls.rotate(rng)
+
+        if let Some(profile) = self.tls.profiles.first() {
+            profile.clone()
+        } else {
+            self.tls.rotate(rng)
+        }
     }
 }
 
