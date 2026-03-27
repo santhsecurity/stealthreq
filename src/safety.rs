@@ -47,8 +47,11 @@ impl Default for SafetyConfig {
             .map(str::to_string)
             .collect();
 
-        let blocked_methods: HashSet<String> =
-            ["DELETE", "PATCH"].iter().copied().map(str::to_string).collect();
+        let blocked_methods: HashSet<String> = ["DELETE", "PATCH"]
+            .iter()
+            .copied()
+            .map(str::to_string)
+            .collect();
 
         Self {
             enabled: true,
@@ -372,7 +375,9 @@ mod tests {
     #[test]
     fn custom_blocked_endpoints() {
         let mut config = SafetyConfig::default();
-        config.blocked_endpoints.insert("/custom/dangerous".to_string());
+        config
+            .blocked_endpoints
+            .insert("/custom/dangerous".to_string());
         assert!(!is_safe_endpoint("/custom/dangerous", &config));
     }
 }

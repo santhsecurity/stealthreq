@@ -18,10 +18,10 @@
 mod config;
 mod headers;
 mod policy;
+pub mod safety;
 mod timing;
 mod tls;
 pub mod waf;
-pub mod safety;
 
 pub use crate::config::StealthProfileConfig;
 pub use crate::headers::{HeaderPolicy, HeaderPolicyConfig};
